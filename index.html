@@ -149,7 +149,7 @@
       <p class="lead">Um painel só seu pra escrever posts, indicar livros, organizar por categoria e mudar até a cor de fundo. Sem abrir um chamado, sem esperar um desenvolvedor.</p>
       <div class="hero-ctas">
         <a href="#preco" class="btn">Ver planos</a>
-        <a href="#como-funciona" class="btn ghost">Como funciona</a>
+        <a href="#" class="btn ghost" onclick="window.open(SHOWROOM_URL,'_blank');return false;">Testar o showroom ↗</a>
       </div>
 
       <div class="palette-picker-wrap">
@@ -295,6 +295,9 @@
 </footer>
 
 <script>
+  // troque pela URL real do dashboard em modo demonstração (ex: seusite.pages.dev/dashboard.html?demo=1)
+  const SHOWROOM_URL = 'https://substrato.clinicasonnen.workers.dev/dashboard.html';
+
   const PALETTES = [
     { name:'padrão', bg:'#14161A', panel:'#1C1F26', accent:'#C9A24B', text:'#EDE9E0', dim:'#9199A8' },
     { name:'clínico', bg:'#12181A', panel:'#1A2225', accent:'#4E7C7C', text:'#E7EFEE', dim:'#8AA3A0' },
