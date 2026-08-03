@@ -28,6 +28,23 @@
    `PUBLIC_SITE_URL` pra apontar pro endereço real do site publicado (é o que
    o botão "Ver site ↗" no menu lateral abre).
 
+## Login com Google
+
+O dashboard tem um botão "Entrar com Google", além do login por e-mail/senha.
+Pra ele funcionar, configure no Supabase do cliente:
+
+1. **Authentication → Providers → Google**, habilite e cole o Client ID e
+   Client Secret (você cria esses dois no
+   [Google Cloud Console](https://console.cloud.google.com/apis/credentials),
+   como um "OAuth 2.0 Client ID" do tipo "Web application")
+2. No Google Cloud Console, em **Authorized redirect URIs**, adicione a URL
+   que o Supabase mostra na mesma tela de configuração (algo como
+   `https://SEU-PROJETO.supabase.co/auth/v1/callback`)
+3. Pronto — qualquer conta Google consegue clicar em "Entrar com Google" e
+   entrar. Se quiser restringir a só você (ou a um domínio de e-mail
+   específico), isso se controla pela política de RLS das tabelas, não pelo
+   botão em si.
+
 ## Modo showroom (vitrine de vendas)
 
 Em `functions/_lib/supabase.js` existe uma flag `SHOWROOM_MODE`. Quando
