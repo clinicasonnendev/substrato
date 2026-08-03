@@ -1,4 +1,4 @@
-import { getSiteSettings, sbSelect } from './_lib/supabase.js';
+import { getSiteSettings, sbSelect, SHOWROOM_MODE, SHOWROOM_CTA_URL } from './_lib/supabase.js';
 import { renderPage, escapeHtml } from './_lib/layout.js';
 
 function renderLandingBlocks(blocks) {
@@ -63,6 +63,11 @@ export async function onRequestGet(context) {
     <div class="card-grid">
       ${books.length ? books.map(renderBookCard).join('') : '<div class="empty-note">Nenhum livro publicado ainda.</div>'}
     </div>
+    ${SHOWROOM_MODE ? `
+    <div class="showroom-cta">
+      <h2>Gostou do que fez?</h2>
+      <a class="btn-cta" href="${escapeHtml(SHOWROOM_CTA_URL)}" target="_blank" rel="noopener">Clique aqui pra ser seu</a>
+    </div>` : ''}
   `;
 
   const html = renderPage({

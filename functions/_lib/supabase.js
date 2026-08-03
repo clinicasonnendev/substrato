@@ -38,3 +38,14 @@ export async function getSiteSettings(env) {
     radius: '10px',
   };
 }
+
+// ============================================================
+// MODO SHOWROOM
+// Deixe true só no seu ambiente de demonstração/vitrine, onde
+// quem estiver testando o dashboard vê um convite pra virar
+// cliente ao final da home. Em qualquer entrega pra cliente
+// real, mude pra false (o site dele não deve convidar ele a
+// "comprar" o que ele já comprou).
+// ============================================================
+export const SHOWROOM_MODE = true;
+export const SHOWROOM_CTA_URL = 'https://wa.me/5500000000000'; // troque pelo link de venda/contato real

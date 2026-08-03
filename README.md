@@ -24,7 +24,60 @@
    - `SUPABASE_ANON_KEY` = anon key do mesmo projeto
 4. `dashboard.html` continua usando as constantes hardcoded no topo do arquivo
    (`SUPABASE_URL` / `SUPABASE_ANON_KEY`) porque ele roda 100% no navegador —
-   edite essas duas linhas com os mesmos valores do passo 3.
+   edite essas duas linhas com os mesmos valores do passo 3. Edite também
+   `PUBLIC_SITE_URL` pra apontar pro endereço real do site publicado (é o que
+   o botão "Ver site ↗" no menu lateral abre).
+
+## Modo showroom (vitrine de vendas)
+
+Em `functions/_lib/supabase.js` existe uma flag `SHOWROOM_MODE`. Quando
+`true`, a home do site público ganha um bloco final "Gostou do que fez?
+Clique aqui pra ser seu", linkando pra `SHOWROOM_CTA_URL` (WhatsApp, e-mail,
+ou sua página de vendas). Serve pra transformar o próprio dashboard num
+showroom: alguém testa, monta a aparência e os blocos do jeito que gosta,
+clica em "Ver site ↗", vê o resultado ao vivo, e no fim da página tem o
+convite pra fechar negócio.
+
+**Importante**: em qualquer entrega pra cliente que já comprou, mude
+`SHOWROOM_MODE` pra `false`. O site dele não deve convidar ele a "ser seu"
+algo que ele já é dono.
+
+## Showroom: testar sem login
+
+Além do CTA na home, o `dashboard.html` tem sua própria flag, `DEMO_MODE`
+(perto do topo do `<script>`). Quando `true`:
+
+- a tela de login vira só uma fachada: os campos já vêm preenchidos e
+  desabilitados, o botão diz "Entrar no showroom", e clicar nele não faz
+  nenhuma autenticação de verdade, só libera o painel
+- aparece uma faixa dourada fixa no rodapé avisando que é modo demonstração
+- toda escrita (posts, livros, aparência, blocos) passa a usar a chave
+  anônima, porque não existe sessão de usuário nenhuma
+
+Pra isso funcionar, o projeto Supabase por trás dessa instância precisa
+rodar `demo-rls-anon-write.sql`, que libera escrita anônima nas tabelas.
+**Nunca rode esse arquivo num projeto de cliente real** — ele remove
+completamente a proteção de login nas escritas.
+
+Na página de vendas (`index.html`, entrega separada), o botão "Testar o
+showroom ↗" no hero aponta pra `SHOWROOM_URL` — troque pela URL real do seu
+`dashboard.html?` publicado com `DEMO_MODE = true`.
+
+## Reset automático do showroom
+
+Como qualquer visitante pode escrever no showroom, o conteúdo vai ficando
+bagunçado com o tempo. `reset-demo.sql` apaga tudo e devolve um post, um
+livro e dois blocos de exemplo, além de resetar as cores pro padrão.
+
+- Rode manualmente sempre que quiser, direto no SQL Editor
+- Ou agende automático: habilite a extensão `pg_cron` em
+  **Database → Extensions** e descomente o bloco `cron.schedule` no fim do
+  arquivo (por padrão, roda todo dia às 4h da manhã)
+
+Uma limitação a saber: esse reset limpa as tabelas (o que aparece no
+dashboard), mas não apaga os arquivos de imagem já enviados pro bucket do
+Storage. Eles ficam órfãos, sem custo alto no curto prazo, mas vale limpar
+a pasta manualmente em **Storage → media** de tempos em tempos.
 
 ## Por que ficou assim
 
