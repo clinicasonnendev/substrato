@@ -10,32 +10,57 @@
 // ============================================================
 
 // ---------- CONFIG ----------
-// SUPABASE_URL e SUPABASE_ANON_KEY já vêm das "Variables" que
-// você configurou na tela de criação do Worker (env.SUPABASE_URL
-// / env.SUPABASE_ANON_KEY). Não precisa repetir aqui.
+// SUPABASE_URL e SUPABASE_ANON_KEY nas env vars funcionam como "tenant
+// padrão" (usado no domínio .workers.dev e como fallback se um domínio
+// não tiver entrada no KV). Pra multi-cliente de verdade, cada domínio
+// tem sua própria linha no namespace KV "TENANTS" (configurado no
+// wrangler.jsonc), com um JSON assim:
+//   {
+//     "supabase_url": "https://xxxx.supabase.co",
+//     "supabase_anon_key": "sb_publishable_...",
+//     "demo_mode": false,
+//     "showroom_mode": false,
+//     "showroom_cta_url": "https://wa.me/5500000000000"
+//   }
+async function getTenant(env, hostname) {
+  const fallback = {
+    supabase_url: env.SUPABASE_URL,
+    supabase_anon_key: env.SUPABASE_ANON_KEY,
+    demo_mode: false,
+    showroom_mode: false,
+    showroom_cta_url: '',
+  };
+  if (!env.TENANTS) return fallback; // KV não configurado ainda: comporta como single-tenant
 
-const SHOWROOM_MODE = true; // true só na instância de demonstração
-const SHOWROOM_CTA_URL = 'https://wa.me/5500000000000'; // troque pelo link de venda/contato real
+  try {
+    const raw = await env.TENANTS.get(hostname);
+    if (!raw) return fallback; // domínio sem entrada no KV: usa o padrão
+    const tenant = JSON.parse(raw);
+    return { ...fallback, ...tenant };
+  } catch {
+    return fallback;
+  }
+}
 
 // ---------- SUPABASE (via REST, sem SDK) ----------
-function sbHeaders(env) {
+function sbHeaders(tenant) {
   return {
-    apikey: env.SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+    apikey: tenant.supabase_anon_key,
+    Authorization: `Bearer ${tenant.supabase_anon_key}`,
   };
 }
-async function sbSelect(env, table, query) {
-  const url = `${env.SUPABASE_URL}/rest/v1/${table}?${query}`;
-  const res = await fetch(url, { headers: sbHeaders(env) });
+async function sbSelect(tenant, table, query) {
+  const url = `${tenant.supabase_url}/rest/v1/${table}?${query}`;
+  const res = await fetch(url, { headers: sbHeaders(tenant) });
   if (!res.ok) return [];
   return res.json();
 }
-async function sbSingle(env, table, query) {
-  const rows = await sbSelect(env, table, query);
+async function sbSingle(tenant, table, query) {
+  const rows = await sbSelect(tenant, table, query);
   return rows[0] || null;
 }
-async function getSiteSettings(env) {
-  const data = await sbSingle(env, 'site_settings', 'id=eq.1&select=*');
+async function getSiteSettings(tenant) {
+  const data = await sbSingle(tenant, 'site_settings', 'id=eq.1&select=*');
   return data || {
     site_name: 'Meu Site', tagline: '',
     color_bg: '#14161A', color_panel: '#1C1F26',
@@ -128,11 +153,14 @@ ${renderFooter(settings)}
 function renderLandingBlocks(blocks) {
   return blocks.map((b, i) => {
     if (i === 0 && b.block_type !== 'image') {
+      const hasImage = !!b.image_url;
       return `
-        <div class="hero-block">
-          <h1>${b.title || ''}</h1>
-          <div class="tagline">${b.content_html || ''}</div>
-          ${b.image_url ? `<img src="${escapeHtml(b.image_url)}" class="hero-image">` : ''}
+        <div class="hero-block ${hasImage ? 'has-bg' : ''}" ${hasImage ? `style="background-image:url('${escapeHtml(b.image_url)}')"` : ''}>
+          ${hasImage ? '<div class="hero-overlay"></div>' : ''}
+          <div class="hero-content">
+            <h1>${b.title || ''}</h1>
+            <div class="tagline">${b.content_html || ''}</div>
+          </div>
         </div>`;
     }
     const cls = b.block_type === 'text' ? 'text-only' : b.block_type === 'image' ? 'image-only' : '';
@@ -165,13 +193,13 @@ function renderBookCard(b) {
 }
 
 // ---------- PÁGINAS ----------
-async function renderHome(env, origin) {
+async function renderHome(tenant, origin) {
   const url = origin + '/';
   const [settings, blocks, posts, books] = await Promise.all([
-    getSiteSettings(env),
-    sbSelect(env, 'landing_blocks', 'select=*&order=order_index'),
-    sbSelect(env, 'posts', 'select=title,slug,excerpt,cover_image_url,published_at&status=eq.published&order=published_at.desc&limit=6'),
-    sbSelect(env, 'books', 'select=title,author,slug,synopsis,cover_image_url,rating,published_at&status=eq.published&order=published_at.desc&limit=6'),
+    getSiteSettings(tenant),
+    sbSelect(tenant, 'landing_blocks', 'select=*&order=order_index'),
+    sbSelect(tenant, 'posts', 'select=title,slug,excerpt,cover_image_url,published_at&status=eq.published&order=published_at.desc&limit=6'),
+    sbSelect(tenant, 'books', 'select=title,author,slug,synopsis,cover_image_url,rating,published_at&status=eq.published&order=published_at.desc&limit=6'),
   ]);
 
   const bodyHtml = `
@@ -184,10 +212,10 @@ async function renderHome(env, origin) {
     <div class="card-grid">
       ${books.length ? books.map(renderBookCard).join('') : '<div class="empty-note">Nenhum livro publicado ainda.</div>'}
     </div>
-    ${SHOWROOM_MODE ? `
+    ${tenant.showroom_mode ? `
     <div class="showroom-cta">
       <h2>Gostou do que fez?</h2>
-      <a class="btn-cta" href="${escapeHtml(SHOWROOM_CTA_URL)}" target="_blank" rel="noopener">Clique aqui pra ser seu</a>
+      <a class="btn-cta" href="${escapeHtml(tenant.showroom_cta_url)}" target="_blank" rel="noopener">Clique aqui pra ser seu</a>
     </div>` : ''}
   `;
 
@@ -195,11 +223,11 @@ async function renderHome(env, origin) {
   return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=120' } });
 }
 
-async function renderSingle(env, origin, type, slug) {
+async function renderSingle(tenant, origin, type, slug) {
   const table = type === 'post' ? 'posts' : 'books';
   const url = `${origin}/${type === 'post' ? 'post' : 'livro'}/${slug}`;
-  const settings = await getSiteSettings(env);
-  const item = await sbSingle(env, table, `slug=eq.${encodeURIComponent(slug)}&status=eq.published&select=*`);
+  const settings = await getSiteSettings(tenant);
+  const item = await sbSingle(tenant, table, `slug=eq.${encodeURIComponent(slug)}&status=eq.published&select=*`);
 
   if (!item) {
     const bodyHtml = `<div class="article-view"><a class="back-link" href="/">← voltar</a><p>${type === 'post' ? 'Texto' : 'Livro'} não encontrado.</p></div>`;
@@ -237,10 +265,10 @@ async function renderSingle(env, origin, type, slug) {
   return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' } });
 }
 
-async function renderSitemap(env, origin) {
+async function renderSitemap(tenant, origin) {
   const [posts, books] = await Promise.all([
-    sbSelect(env, 'posts', 'select=slug,published_at&status=eq.published'),
-    sbSelect(env, 'books', 'select=slug,published_at&status=eq.published'),
+    sbSelect(tenant, 'posts', 'select=slug,published_at&status=eq.published'),
+    sbSelect(tenant, 'books', 'select=slug,published_at&status=eq.published'),
   ]);
   const urls = [
     { loc: `${origin}/`, lastmod: new Date().toISOString() },

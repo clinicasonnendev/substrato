@@ -20,10 +20,20 @@ header .wrap{display:flex;align-items:center;justify-content:space-between;}
 .site-nav{display:flex;gap:22px;font-size:14px;color:var(--text-dim);}
 .site-nav a:hover{color:var(--accent);}
 
-.hero-block{padding:70px 0 50px;}
+.hero-block{padding:70px 0 50px;position:relative;}
+.hero-block.has-bg{
+  padding:100px 24px;margin:0 -24px 50px;background-size:cover;background-position:center;
+  border-radius:var(--radius);
+}
+.hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.65) 100%);
+  border-radius:var(--radius);
+}
+.hero-content{position:relative;z-index:1;max-width:640px;}
+.hero-block.has-bg h1, .hero-block.has-bg .tagline{color:#fff;}
 .hero-block h1{font-size:44px;line-height:1.12;}
 .hero-block .tagline{color:var(--text-dim);font-size:16px;max-width:520px;margin-top:12px;}
-.hero-image{margin-top:28px;border-radius:var(--radius);width:100%;max-height:340px;object-fit:cover;}
 
 .landing-block{padding:50px 0;border-top:1px solid var(--border);}
 .landing-block .block-inner{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;}
