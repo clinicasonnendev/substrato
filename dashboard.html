@@ -572,9 +572,9 @@
 
 <script>
 /* ================= CONFIG ================= */
-const SUPABASE_URL = 'https://zeuodrxxituijnyuwctc.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_8MsOHr_ffXPvnUJVDgE0Kg__D2mH4nw';
-const PUBLIC_SITE_URL = 'https://substrato.clinicasonnen.workers.dev'; // URL do site publicado (o que o botão "Ver site" abre)
+const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
+const SUPABASE_ANON_KEY = 'SUA-ANON-KEY';
+const PUBLIC_SITE_URL = 'https://seusite.pages.dev'; // URL do site publicado (o que o botão "Ver site" abre)
 
 // ============================================================
 // MODO DEMONSTRAÇÃO (showroom)
@@ -587,7 +587,7 @@ const PUBLIC_SITE_URL = 'https://substrato.clinicasonnen.workers.dev'; // URL do
 // projeto de cliente real).
 // ============================================================
 const DEMO_MODE = false;
-const SITE_DOMAIN = 'substrato.clinicasonnen.workers.dev'; // usado só no preview de SEO
+const SITE_DOMAIN = 'seusite.com.br'; // usado só no preview de SEO
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -994,6 +994,15 @@ async function loadLandingBlocks(){
           ${b.image_url ? `<img src="${b.image_url}">` : `<div class="drop-label">clique pra enviar</div>`}
           <input type="file" id="lb-file-${b.id}" accept="image/*" style="display:none" onchange="handleLandingImage(event,'${b.id}')">
         </div>
+      </div>
+      <div class="field" style="max-width:280px">
+        <label>Posição da imagem</label>
+        <select id="lb-position-${b.id}" style="width:100%;padding:9px 12px;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
+          <option value="right" ${b.image_position==='right'?'selected':''}>Direita (ao lado do texto)</option>
+          <option value="left" ${b.image_position==='left'?'selected':''}>Esquerda (ao lado do texto)</option>
+          <option value="center" ${b.image_position==='center'?'selected':''}>Centro (acima do texto)</option>
+          <option value="background" ${b.image_position==='background'?'selected':''}>Atrás, como fundo</option>
+        </select>
       </div>` : ''}
     </div>
   `).join('');
@@ -1013,8 +1022,10 @@ async function saveLandingBlock(id){
   const payload = {};
   const titleEl = document.getElementById('lb-title-'+id);
   const contentEl = document.getElementById('lb-content-'+id);
+  const positionEl = document.getElementById('lb-position-'+id);
   if(titleEl) payload.title = titleEl.value;
   if(contentEl) payload.content_html = contentEl.value;
+  if(positionEl) payload.image_position = positionEl.value;
   if(landingImageUrls[id]) payload.image_url = landingImageUrls[id];
   const { error } = await sb.from('landing_blocks').update(payload).eq('id', id);
   if(error){ showToast('Erro: '+error.message); return; }

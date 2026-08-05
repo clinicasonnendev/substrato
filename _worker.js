@@ -151,23 +151,61 @@ ${renderFooter(settings)}
 
 // ---------- BLOCOS / CARDS ----------
 function renderLandingBlocks(blocks) {
-  return blocks.map((b, i) => {
-    if (i === 0 && b.block_type !== 'image') {
-      const hasImage = !!b.image_url;
-      return `
-        <div class="hero-block ${hasImage ? 'has-bg' : ''}" ${hasImage ? `style="background-image:url('${escapeHtml(b.image_url)}')"` : ''}>
-          ${hasImage ? '<div class="hero-overlay"></div>' : ''}
-          <div class="hero-content">
-            <h1>${b.title || ''}</h1>
-            <div class="tagline">${b.content_html || ''}</div>
-          </div>
-        </div>`;
-    }
-    const cls = b.block_type === 'text' ? 'text-only' : b.block_type === 'image' ? 'image-only' : '';
-    const textPart = b.block_type !== 'image' ? `<div><h2>${b.title || ''}</h2><div>${b.content_html || ''}</div></div>` : '';
-    const imgPart = b.block_type !== 'text' && b.image_url ? `<img src="${escapeHtml(b.image_url)}">` : '';
-    return `<div class="landing-block ${cls}"><div class="block-inner">${textPart}${imgPart}</div></div>`;
-  }).join('');
+  return blocks.map((b, i) => renderBlock(b, i === 0)).join('');
+}
+
+function renderBlock(b, isHero) {
+  const hasImage = b.block_type !== 'text' && !!b.image_url;
+  const position = b.image_position || 'right';
+  const heading = isHero ? `<h1>${b.title || ''}</h1>` : `<h2>${b.title || ''}</h2>`;
+  const textHtml = `${heading}<div class="${isHero ? 'tagline' : ''}">${b.content_html || ''}</div>`;
+
+  // bloco só de imagem, sem texto nenhum
+  if (b.block_type === 'image') {
+    return b.image_url
+      ? `<div class="landing-block image-only"><div class="wrap"><img src="${escapeHtml(b.image_url)}"></div></div>`
+      : '';
+  }
+
+  // sem imagem: só o texto
+  if (!hasImage) {
+    return isHero
+      ? `<div class="hero-block"><div class="hero-content">${textHtml}</div></div>`
+      : `<div class="landing-block text-only"><div class="wrap">${textHtml}</div></div>`;
+  }
+
+  // com imagem "atrás", como fundo
+  if (position === 'background') {
+    const wrapClass = isHero ? 'hero-block has-bg' : 'landing-block has-bg';
+    return `
+      <div class="${wrapClass}" style="background-image:url('${escapeHtml(b.image_url)}')">
+        <div class="hero-overlay"></div>
+        <div class="wrap"><div class="hero-content">${textHtml}</div></div>
+      </div>`;
+  }
+
+  // com imagem "no centro", acima do texto
+  if (position === 'center') {
+    return `
+      <div class="${isHero ? 'hero-block' : 'landing-block'} pos-center">
+        <div class="wrap">
+          <img class="block-image-center" src="${escapeHtml(b.image_url)}">
+          <div class="hero-content" style="margin:0 auto;">${textHtml}</div>
+        </div>
+      </div>`;
+  }
+
+  // esquerda ou direita: lado a lado
+  const sideClass = position === 'left' ? 'pos-left' : 'pos-right';
+  return `
+    <div class="${isHero ? 'hero-block' : 'landing-block'} ${sideClass}">
+      <div class="wrap">
+        <div class="block-inner">
+          <div class="hero-content">${textHtml}</div>
+          <img src="${escapeHtml(b.image_url)}">
+        </div>
+      </div>
+    </div>`;
 }
 function renderPostCard(p) {
   return `

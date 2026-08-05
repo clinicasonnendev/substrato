@@ -21,26 +21,36 @@ header .wrap{display:flex;align-items:center;justify-content:space-between;}
 .site-nav a:hover{color:var(--accent);}
 
 .hero-block{padding:70px 0 50px;position:relative;}
-.hero-block.has-bg{
-  padding:100px 24px;margin:0 -24px 50px;background-size:cover;background-position:center;
-  border-radius:var(--radius);
-}
-.hero-overlay{
-  position:absolute;inset:0;
-  background:linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.65) 100%);
-  border-radius:var(--radius);
-}
-.hero-content{position:relative;z-index:1;max-width:640px;}
-.hero-block.has-bg h1, .hero-block.has-bg .tagline{color:#fff;}
 .hero-block h1{font-size:44px;line-height:1.12;}
 .hero-block .tagline{color:var(--text-dim);font-size:16px;max-width:520px;margin-top:12px;}
 
 .landing-block{padding:50px 0;border-top:1px solid var(--border);}
-.landing-block .block-inner{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;}
-.landing-block.text-only .block-inner{grid-template-columns:1fr;}
-.landing-block.image-only .block-inner{grid-template-columns:1fr;}
-.landing-block img{border-radius:var(--radius);width:100%;}
-@media(max-width:720px){ .landing-block .block-inner{grid-template-columns:1fr !important;} }
+.landing-block h2{font-size:26px;}
+
+.block-inner{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;}
+.block-inner img{border-radius:var(--radius);width:100%;}
+.pos-left .block-inner{direction:rtl;}
+.pos-left .block-inner > *{direction:ltr;}
+.text-only .wrap, .image-only .wrap{max-width:880px;}
+.image-only img{border-radius:var(--radius);width:100%;}
+@media(max-width:720px){ .block-inner{grid-template-columns:1fr !important;direction:ltr !important;} }
+
+.pos-center .wrap{text-align:center;}
+.block-image-center{max-width:480px;width:100%;margin:0 auto 28px;border-radius:var(--radius);display:block;}
+.pos-center .hero-content{max-width:640px;}
+.pos-center .tagline{margin-left:auto;margin-right:auto;}
+
+.has-bg{
+  position:relative;background-size:cover;background-position:center;
+  padding:90px 0;border-top:none;
+}
+.has-bg .hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.65) 100%);
+}
+.has-bg .wrap{position:relative;z-index:1;}
+.has-bg .hero-content{max-width:640px;}
+.has-bg h1, .has-bg h2, .has-bg .tagline, .has-bg div{color:#fff;}
 
 .section-title{margin:64px 0 24px;}
 .section-title h2{font-size:24px;}
