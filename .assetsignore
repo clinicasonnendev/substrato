@@ -1,0 +1,17 @@
+.git
+.git/**
+.wrangler
+.wrangler/**
+node_modules
+node_modules/**
+schema.sql
+fix-permissions.sql
+seed-landing-blocks.sql
+demo-rls-anon-write.sql
+reset-demo.sql
+fix-block-types.sql
+add-image-position-column.sql
+README.md
+_worker.js
+wrangler.jsonc
+.gitignore
