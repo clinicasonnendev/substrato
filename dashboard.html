@@ -572,24 +572,32 @@
 
 <script>
 /* ================= CONFIG ================= */
-const SUPABASE_URL = 'https://zeuodrxxituijnyuwctc.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_8MsOHr_ffXPvnUJVDgE0Kg__D2mH4nw';
-const PUBLIC_SITE_URL = 'https://substrato.clinicasonnen.workers.dev'; // URL do site publicado (o que o botão "Ver site" abre)
+// Nada fixo aqui de propósito: o dashboard pergunta pro próprio
+// Worker (rota /api/config) qual Supabase usar, baseado no
+// domínio de onde está sendo acessado. Isso é o que permite o
+// MESMO dashboard.html funcionar pra qualquer cliente, sem editar
+// nada por cliente. A resolução de domínio→Supabase mora no
+// namespace KV "TENANTS" (configurado no wrangler.jsonc).
+let sb, DEMO_MODE, PUBLIC_SITE_URL, SITE_DOMAIN;
 
-// ============================================================
-// MODO DEMONSTRAÇÃO (showroom)
-// true só na instância pública que qualquer visitante pode
-// testar sem senha real. O "login" vira só uma tela de
-// fachada: clica em Entrar e já cai no painel. As escritas
-// usam a chave anônima, então o projeto Supabase por trás
-// dessa instância precisa ter as policies de
-// "demo-rls-anon-write.sql" aplicadas (NÃO aplique isso num
-// projeto de cliente real).
-// ============================================================
-const DEMO_MODE = false;
-const SITE_DOMAIN = 'substrato.clinicasonnen.workers.dev'; // usado só no preview de SEO
-
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function bootstrap(){
+  try {
+    const res = await fetch('/api/config');
+    if(!res.ok) throw new Error('config indisponível');
+    const config = await res.json();
+    sb = supabase.createClient(config.supabase_url, config.supabase_anon_key);
+    DEMO_MODE = !!config.demo_mode;
+    PUBLIC_SITE_URL = window.location.origin;
+    SITE_DOMAIN = window.location.hostname;
+  } catch(e){
+    document.body.innerHTML = `<div style="padding:60px;text-align:center;font-family:sans-serif;color:#EDE9E0;background:#14161A;min-height:100vh;">
+      <p>Não foi possível carregar a configuração deste site.</p>
+      <p style="color:#9199A8;font-size:13px;">Confere se o namespace KV "TENANTS" está configurado no Worker, com uma entrada pra este domínio.</p>
+    </div>`;
+    return;
+  }
+  checkSession();
+}
 
 /* ================= STATE ================= */
 let allCategories = [];
@@ -1244,7 +1252,7 @@ async function saveAppearance(){
 }
 
 /* ================= INIT ================= */
-checkSession();
+bootstrap();
 </script>
 </body>
 </html>

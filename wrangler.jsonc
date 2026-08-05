@@ -11,6 +11,12 @@
     "binding": "ASSETS",
     "run_worker_first": true
   },
+  "kv_namespaces": [
+    {
+      "binding": "TENANTS",
+      "id": "COLE_AQUI_O_ID_DO_NAMESPACE_KV"
+    }
+  ],
   "compatibility_flags": [
     "nodejs_compat"
   ]

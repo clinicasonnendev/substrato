@@ -328,15 +328,27 @@ export default {
     const path = url.pathname;
 
     try {
-      if (path === '/' ) return await renderHome(env, origin);
+      const tenant = await getTenant(env, url.hostname);
+
+      if (path === '/' ) return await renderHome(tenant, origin);
 
       const postMatch = path.match(/^\/post\/([^/]+)\/?$/);
-      if (postMatch) return await renderSingle(env, origin, 'post', decodeURIComponent(postMatch[1]));
+      if (postMatch) return await renderSingle(tenant, origin, 'post', decodeURIComponent(postMatch[1]));
 
       const bookMatch = path.match(/^\/livro\/([^/]+)\/?$/);
-      if (bookMatch) return await renderSingle(env, origin, 'book', decodeURIComponent(bookMatch[1]));
+      if (bookMatch) return await renderSingle(tenant, origin, 'book', decodeURIComponent(bookMatch[1]));
 
-      if (path === '/sitemap.xml') return await renderSitemap(env, origin);
+      if (path === '/sitemap.xml') return await renderSitemap(tenant, origin);
+
+      // usado pelo dashboard.html pra descobrir as credenciais certas
+      // do domínio de onde ele está sendo acessado
+      if (path === '/api/config') {
+        return new Response(JSON.stringify({
+          supabase_url: tenant.supabase_url,
+          supabase_anon_key: tenant.supabase_anon_key,
+          demo_mode: tenant.demo_mode,
+        }), { headers: { 'content-type': 'application/json' } });
+      }
     } catch (err) {
       return new Response('Erro ao carregar a página: ' + err.message, { status: 500 });
     }
